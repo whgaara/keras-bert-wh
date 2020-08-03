@@ -4,8 +4,8 @@ import glob
 import numpy as np
 
 
-def some_texts():
-    filenames = glob.glob('data/*.txt')
+def get_texts():
+    filenames = glob.glob('pretrain/*.txt')
     np.random.shuffle(filenames)
     count, texts = 0, []
     for filename in filenames:
@@ -26,6 +26,6 @@ class TrainingData(object):
 
 
 if __name__ == '__main__':
-    st = some_texts()
+    st = get_texts()
     for i in st:
         print(i)
