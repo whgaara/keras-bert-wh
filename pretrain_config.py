@@ -1,5 +1,6 @@
 # ## 文件路径 ## #
-ModelSavePath = ''
+ModelSavePath = 'checkpoin/finetune'
+VocabPath = 'checkpoin/pretrain/vocab.txt'
 
 # ## 训练参数 ## #
 Epochs = 32
