@@ -1,8 +1,7 @@
-import re
 import os
-import json
 import glob
 import math
+import pkuseg
 import numpy as np
 import tensorflow as tf
 
@@ -32,6 +31,7 @@ def get_texts():
 class RobertaTrainingData(object):
     def __init__(self):
         self.tokenizer = Tokenizer(VocabPath, do_lower_case=True)
+        self.seg = pkuseg.pkuseg()
         self.vocab_size = self.tokenizer._vocab_size
         self.token_pad_id = self.tokenizer._token_pad_id
         self.token_cls_id = self.tokenizer._token_start_id
@@ -54,10 +54,14 @@ class RobertaTrainingData(object):
     def texts_to_ids(self, texts):
         texts_ids = []
         for text in texts:
-            words_tokes = self.tokenizer.tokenize(text=text)
-            # text_ids首位分别是cls和sep，这里暂时去除
-            words_ids = self.tokenizer.tokens_to_ids(words_tokes)[1:-1]
-            texts_ids.append(words_ids)
+            # 处理每个句子
+            # 注意roberta里并不是针对每个字进行mask，而是对字或者词进行mask
+            words = self.seg.cut(text)
+            for word in words:
+                # text_ids首位分别是cls和sep，这里暂时去除
+                word_tokes = self.tokenizer.tokenize(text=word)[1:-1]
+                words_ids = self.tokenizer.tokens_to_ids(word_tokes)
+                texts_ids.append(words_ids)
         return texts_ids
 
     def ids_to_mask(self, texts_ids):
@@ -67,16 +71,19 @@ class RobertaTrainingData(object):
         instances = []
         total_ids = []
         total_masks = []
+        # 为每个字或者词生成一个概率，用于判断是否mask
+        mask_rates = np.random.random(len(texts_ids))
 
-        for text_ids in texts_ids:
+        for i, word_id in enumerate(texts_ids):
             # 为每个字生成对应概率
-            mask_rates = np.random.random(len(text_ids))
-            for i, word_id in enumerate(text_ids):
-                total_ids.append(word_id)
-                if mask_rates[i] < MaskRate:
-                    total_masks.append(self.token_process(word_id))
-                else:
-                    total_masks.append(0)
+            total_ids.extend(word_id)
+            if mask_rates[i] < MaskRate:
+                # 因为word_id可能是一个字，也可能是一个词
+                for sub_id in word_id:
+                    total_masks.append(self.token_process(sub_id))
+            else:
+                total_masks.extend([0]*len(word_id))
+
         # 每个实例的最大长度为512，因此对一个段落进行裁剪
         # 510 = 512 - 2，给cls和sep留的位置
         for i in range(math.ceil(len(total_ids)/510)):
