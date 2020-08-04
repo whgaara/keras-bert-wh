@@ -1,3 +1,6 @@
+# coding:utf-8
+# author: hang.wang
+
 import os
 import glob
 import math
