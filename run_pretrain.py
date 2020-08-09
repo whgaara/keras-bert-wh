@@ -2,6 +2,7 @@
 # author:hang.wang
 
 import keras
+import tensorflow as tf
 
 from pretrain_config import *
 from tfrecord_generator import RobertaTrainingData

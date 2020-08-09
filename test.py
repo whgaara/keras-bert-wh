@@ -1,13 +1,14 @@
-import time
-import re
-from tqdm import tqdm
+import tensorflow as tf
+import keras.backend as K
+a = tf.ones([10], dtype=tf.int8)
 
+b = tf.constant(1)
+c = tf.zeros((1))
+d = K.zeros([1])
+print(d)
 
-def sss():
-    for i in range(1000):
-        yield i
-
-for i in tqdm(sss()):
-    print(i)
-
-
+with tf.Session() as sess:
+    print(sess.run(a))
+    print(sess.run(a-1))
+    print(sess.run(b))
+    print(sess.run(c))
