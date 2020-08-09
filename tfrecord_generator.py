@@ -7,6 +7,7 @@ import math
 import pkuseg
 import numpy as np
 import tensorflow as tf
+import keras.backend as K
 
 from tqdm import tqdm
 from model.tokenizers import Tokenizer
@@ -120,6 +121,44 @@ class RobertaTrainingData(object):
             serialize_instance = tf_example.SerializeToString()
             serialize_instances.append(serialize_instance)
         return serialize_instances
+
+    @staticmethod
+    def parse_function(serialized):
+        features = {
+            'token_ids': tf.io.FixedLenFeature([SentenceLength], tf.int64),
+            'mask_ids': tf.io.FixedLenFeature([SentenceLength], tf.int64),
+        }
+        features = tf.io.parse_single_example(serialized, features)
+        token_ids = features['token_ids']
+        mask_ids = features['mask_ids']
+        segment_ids = K.zeros_like(token_ids, dtype='int64')
+        is_masked = K.not_equal(mask_ids, 0)
+        masked_token_ids = K.switch(is_masked, mask_ids - 1, token_ids)
+        x = {
+            'Input-Token': masked_token_ids,
+            'Input-Segment': segment_ids,
+            'token_ids': token_ids,
+            'is_masked': K.cast(is_masked, K.floatx()),
+        }
+        y = {
+            'mlm_loss': K.zeros([1]),
+            'mlm_acc': K.zeros([1]),
+        }
+        return x, y
+
+    @staticmethod
+    def tfrecord_load(tfrecords):
+        """
+        加载处理成tfrecord格式的语料
+        """
+        if not isinstance(tfrecords, list):
+            tfrecords = [tfrecords]
+        dataset = tf.data.TFRecordDataset(tfrecords)  # 加载
+        dataset = dataset.map(RobertaTrainingData.parse_function)  # 解析
+        dataset = dataset.repeat()  # 循环
+        dataset = dataset.shuffle(BatchSize * 1000)  # 打乱
+        dataset = dataset.batch(BatchSize)  # 成批
+        return dataset
 
 
 if __name__ == '__main__':

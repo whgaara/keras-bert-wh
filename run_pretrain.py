@@ -4,6 +4,10 @@
 import keras
 
 from pretrain_config import *
+from tfrecord_generator import RobertaTrainingData
+
+tfrecords = ['data/roberta_%s.tfrecord' % i for i in range(10)]
+data_set = RobertaTrainingData.tfrecord_load(tfrecords)
 
 
 class SaveCheckpoint(keras.callbacks.Callback):
