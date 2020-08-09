@@ -144,7 +144,7 @@ class RobertaTrainingData(object):
             'is_masked': K.cast(is_masked, K.floatx()),
         }
         y = {
-            # 这种场景下会出现一种非常少见的报错，暂时无法解决
+            # 某些版本下会出现一种非常少见的报错，暂时无法解决
             # 'mlm_loss': K.zeros([1]),
             # 'mlm_acc': K.zeros([1]),
             'mlm_loss': tf.zeros(1),
@@ -169,12 +169,12 @@ class RobertaTrainingData(object):
 
 if __name__ == '__main__':
     robert = RobertaTrainingData()
-    # 考虑到使用动态mask，因此，同样的句子会重复10次，每次mask的内容是不一样的。
-    # for i in range(10):
-    #     writer = tf.python_io.TFRecordWriter(os.path.join('data', 'roberta_%s.tfrecord' % i))
-    #     for texts in tqdm(get_texts()):
-    #         texts_ids = robert.texts_to_ids(texts)
-    #         instances = robert.ids_to_mask(texts_ids)
-    #         serialize_instances = robert.tfrecord_serialize(instances)
-    #         for serialize_instance in serialize_instances:
-    #             writer.write(serialize_instance)
+    # 使用动态mask，因此，同样的句子会重复10次，每次mask的内容是不一样的。
+    for i in range(10):
+        writer = tf.python_io.TFRecordWriter(os.path.join('data', 'roberta_%s.tfrecord' % i))
+        for texts in tqdm(get_texts()):
+            texts_ids = robert.texts_to_ids(texts)
+            instances = robert.ids_to_mask(texts_ids)
+            serialize_instances = robert.tfrecord_serialize(instances)
+            for serialize_instance in serialize_instances:
+                writer.write(serialize_instance)

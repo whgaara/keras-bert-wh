@@ -2,7 +2,6 @@
 # author:hang.wang
 
 import keras
-import tensorflow as tf
 
 from pretrain_config import *
 from tfrecord_generator import RobertaTrainingData
@@ -16,11 +15,16 @@ class SaveCheckpoint(keras.callbacks.Callback):
         self.model.save_checkpoint(ModelSavePath, overwrite=True)
 
 
+def build_model_for_pretraining():
+    train_model = None
+    return train_model
+
+
 if __name__ == '__main__':
     save_checkpoint = SaveCheckpoint()
-    train = None
+    train_model = build_model_for_pretraining()
     dataset = None
-    train.fit(
+    train_model.fit(
         dataset,
         steps_per_epoch=StepsPerEpoch,
         epochs=Epochs,
