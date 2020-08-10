@@ -1,6 +1,7 @@
 # ## 文件路径 ## #
 ModelSavePath = 'checkpoint/finetune'
 VocabPath = 'checkpoint/pretrain/vocab.txt'
+BertConfigPath = 'checkpoint/pretrain/bert_config.json'
 
 # ## 训练参数 ## #
 Epochs = 32
