@@ -50,11 +50,9 @@ class Bert(object):
         self.name = name
         self.built = False
 
-    # def call(self):
-    #     pass
-
     def build(self, additional_input_layers):
         # 根据生成bert数据的部分可知：BERT的输入是token_ids和segment_ids
+        # additional_input_layers为可能的其他输入内容
         # 构建输入层
         token_in = Input(shape=(self.sequence_length, ), name='Input-Token')
         segment_in = Input(shape=(self.sequence_length, ), name='Input-Segment')
@@ -71,14 +69,21 @@ class Bert(object):
         s = Embedding(input_dim=2, output_dim=self.embedding_size, mask_zero=True,
                       embeddings_initializer=keras.initializers.truncated_normal(stddev=0.02),
                       name='Embedding-Segment')(segment_in)
-
         # 加入类型信息
         x = Add()([x, s])
-
         # 加入位置信息
         x = PositionEmbedding(input_dim=self.sequence_length, output_dim=self.hidden_size,
                               embeddings_initializer=keras.initializers.zeros,
                               name='Embedding-Position')(x)
+        # layer normalization
+        x = LayerNormalization()
+        # drop out
+        x = Dropout(rate=self.dropout_rate, name='Embedding-Dropout')(x)
+        # dense
+        x = Dense(units=self.hidden_size, kernel_initializer=keras.initializers.truncated_normal(stddev=0.02))(x)
+
+        # 进入bert的主模块层
+
 
 
 
