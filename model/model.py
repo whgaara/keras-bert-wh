@@ -3,6 +3,7 @@ import keras
 from keras.layers import *
 from layers.PositionEmbedding import PositionEmbedding
 from layers.LayerNormalization import LayerNormalization
+from layers.MultiHeadSelfAttention import MultiHeadSelfAttention
 
 
 class Bert(object):
@@ -70,11 +71,11 @@ class Bert(object):
                       name='Embedding-Segment')(segment_in)
         # 加入类型信息
         x = Add()([x, s])
-        # 加入位置信息
+        # 加入位置信息: batch_size * sen_len * embedding_size
         x = PositionEmbedding(input_dim=self.sequence_length, output_dim=self.hidden_size,
                               embeddings_initializer=keras.initializers.zeros,
                               name='Embedding-Position')(x)
-        # layer normalization
+        # layer normalization ???
         x = LayerNormalization(name='Embedding-Norm')(x)
         # drop out
         x = Dropout(rate=self.dropout_rate, name='Embedding-Dropout')(x)
@@ -83,6 +84,16 @@ class Bert(object):
         # -----------------------------embedding层----------------------------- #
 
         # -----------------------------transformer层----------------------------- #
+        for index in range(self.num_hidden_layers):
+            attention_name = 'Transformer-%d-MultiHeadSelfAttention' % index
+            feed_forward_name = 'Transformer-%d-FeedForward' % index
+
+            # MultiHeadSelfAttention
+            new_x = [x, x, x]
+            x = MultiHeadSelfAttention(attention_head_num=self.num_attention_heads,
+                                       attention_head_size=self.attention_head_size,
+                                       kernel_initializer=keras.initializers.truncated_normal(stddev=0.02))(new_x)
+
 
         # -----------------------------transformer层----------------------------- #
 

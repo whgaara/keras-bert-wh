@@ -14,6 +14,7 @@ class LayerNormalization(Layer):
 
     def build(self, input_shape):
         super(LayerNormalization, self).build(input_shape)
+        # shape: embedding_size
         shape = input_shape[-1]
         if self.center:
             self.beta = self.add_weight(shape=shape, initializer='zeros', name='beta')
