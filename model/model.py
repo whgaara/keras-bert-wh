@@ -1,9 +1,5 @@
-import keras
-import tensorflow as tf
-
 from keras.layers import *
-from model.layers import *
-from pretrain_config import *
+from layers.PositionEmbedding import *
 
 
 class Bert(object):
@@ -66,7 +62,7 @@ class Bert(object):
         x = Embedding(input_dim=self.vocab_size, output_dim=self.embedding_size, mask_zero=True,
                       embeddings_initializer=keras.initializers.truncated_normal(stddev=0.02),
                       name='Embedding-Token')(token_in)
-        s = Embedding(input_dim=2, output_dim=self.embedding_size, mask_zero=True,
+        s = Embedding(input_dim=2, output_dim=self.embedding_size,
                       embeddings_initializer=keras.initializers.truncated_normal(stddev=0.02),
                       name='Embedding-Segment')(segment_in)
         # 加入类型信息
@@ -77,6 +73,7 @@ class Bert(object):
                               name='Embedding-Position')(x)
         # layer normalization
         x = LayerNormalization()
+        BatchNormalization
         # drop out
         x = Dropout(rate=self.dropout_rate, name='Embedding-Dropout')(x)
         # dense
