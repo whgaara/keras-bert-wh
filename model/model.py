@@ -1,5 +1,8 @@
+import keras
+
 from keras.layers import *
-from layers.PositionEmbedding import *
+from layers.PositionEmbedding import PositionEmbedding
+from layers.LayerNormalization import LayerNormalization
 
 
 class Bert(object):
@@ -58,7 +61,7 @@ class Bert(object):
             else:
                 self.inputs = [token_in, segment_in, additional_input_layers]
 
-        # 构建bert的embedding层
+        # -----------------------------embedding层----------------------------- #
         x = Embedding(input_dim=self.vocab_size, output_dim=self.embedding_size, mask_zero=True,
                       embeddings_initializer=keras.initializers.truncated_normal(stddev=0.02),
                       name='Embedding-Token')(token_in)
@@ -72,14 +75,16 @@ class Bert(object):
                               embeddings_initializer=keras.initializers.zeros,
                               name='Embedding-Position')(x)
         # layer normalization
-        x = LayerNormalization()
-        BatchNormalization
+        x = LayerNormalization(name='Embedding-Norm')(x)
         # drop out
         x = Dropout(rate=self.dropout_rate, name='Embedding-Dropout')(x)
         # dense
         x = Dense(units=self.hidden_size, kernel_initializer=keras.initializers.truncated_normal(stddev=0.02))(x)
+        # -----------------------------embedding层----------------------------- #
 
-        # 进入bert的主模块层
+        # -----------------------------transformer层----------------------------- #
+
+        # -----------------------------transformer层----------------------------- #
 
 
 
