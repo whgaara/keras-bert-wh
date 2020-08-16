@@ -10,7 +10,7 @@ class FeedForward(Layer):
                  units,
                  activation='relu',
                  use_bias=True,
-                 kernel_initializer='glorot_uniform',
+                 kernel_initializer=None,
                  **kwargs):
         super(FeedForward, self).__init__(**kwargs)
         self.units = units

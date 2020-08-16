@@ -17,11 +17,12 @@ class SaveCheckpoint(keras.callbacks.Callback):
         self.model.save_checkpoint(ModelSavePath, overwrite=True)
 
 
-def build_transformer_model(config_path, with_mlm='linear'):
+def build_transformer_model(config_path='checkpoint/pretrain/bert_config.json', with_mlm='linear'):
     # 载入bert的配置
-    bert_config = {}
-    if not config_path:
-        bert_config = json.load(open(config_path))
+    bert_config = json.load(open(config_path))
+    if 'sequence_length' not in bert_config:
+        bert_config['sequence_length'] = SentenceLength
+    bert_config['name'] = 'bert'
 
     # 加载bert模型
     bert = Bert(**bert_config)
