@@ -1,5 +1,6 @@
-# import tensorflow as tf
-# import keras.backend as K
+import keras
+import tensorflow as tf
+import keras.backend as K
 # a = tf.ones([10], dtype=tf.int8)
 #
 # b = tf.constant(1)
@@ -23,4 +24,11 @@
 # d = [2]
 # print(c + d)
 
-print((None is not None))
+a = K.ones(shape=[128, 2, 512, 64])
+b = K.ones(shape=[128, 2, 512, 64])
+c = K.batch_dot(a, b, axes=[3, 3])
+d = K.batch_dot(a, b, axes=[2, 2])
+keras.layers.multiply()
+print(K.int_shape(c))
+print(K.int_shape(d))
+

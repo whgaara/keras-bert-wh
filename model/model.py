@@ -50,7 +50,7 @@ class Bert(object):
         self.name = name
         self.built = False
 
-    def build(self, additional_input_layers):
+    def call(self, additional_input_layers):
         # 根据生成bert数据的部分可知：BERT的输入是token_ids和segment_ids
         # additional_input_layers为可能的其他输入内容
         # 构建输入层
@@ -90,9 +90,23 @@ class Bert(object):
 
             # MultiHeadSelfAttention
             new_x = [x, x, x]
-            x = MultiHeadSelfAttention(attention_head_num=self.num_attention_heads,
-                                       attention_head_size=self.attention_head_size,
-                                       kernel_initializer=keras.initializers.truncated_normal(stddev=0.02))(new_x)
+            attention_x = MultiHeadSelfAttention(attention_head_num=self.num_attention_heads,
+                                                 attention_head_size=self.attention_head_size,
+                                                 kernel_initializer=keras.initializers.truncated_normal(stddev=0.02),
+                                                 name=attention_name)(new_x)
+
+            # drop out
+            attention_x = Dropout(rate=self.dropout_rate, name='%s-Dropout' % attention_name)(attention_x)
+
+            # add
+            attention_x = Add(name='%s-Add' % attention_name)([x, attention_x])
+
+            # layer normalization
+            attention_x = LayerNormalization(name='%s-Norm' % attention_name)(attention_x)
+
+            # Feed Forward
+
+
 
 
         # -----------------------------transformer层----------------------------- #
