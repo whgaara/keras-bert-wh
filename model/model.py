@@ -6,6 +6,7 @@ from layers.PositionEmbedding import PositionEmbedding
 from layers.LayerNormalization import LayerNormalization
 from layers.MultiHeadSelfAttention import MultiHeadSelfAttention
 from layers.FeedForward import FeedForward
+from layers.AddLayer import AddLayer
 
 
 class Bert(object):
@@ -33,30 +34,34 @@ class Bert(object):
         self.hidden_act = hidden_act
         self.name = name
         self.built = False
+        self.embeddings_x = Embedding(input_dim=self.vocab_size, output_dim=self.hidden_size, mask_zero=True,
+                                      embeddings_initializer=initializers.truncated_normal(stddev=0.02),
+                                      name='Embedding-Token')
+        self.embeddings_s = Embedding(input_dim=2, output_dim=self.hidden_size,
+                                      embeddings_initializer=initializers.truncated_normal(stddev=0.02),
+                                      name='Embedding-Segment')
 
     def build(self):
         # 根据生成bert数据的部分可知：BERT的输入是token_ids和segment_ids
         token_in = Input(shape=(self.sequence_length,), name='Input-Token')
         segment_in = Input(shape=(self.sequence_length,), name='Input-Segment')
-        inputs = [token_in, segment_in]
-        outputs = self.call(inputs)
-        if not isinstance(outputs, list):
-            outputs = [outputs]
-        self.model = Model(inputs, outputs, name=self.name)
+        self.inputs = [token_in, segment_in]
+        self.outputs = self.call(self.inputs)
+        if not isinstance(self.outputs, list):
+            self.outputs = [self.outputs]
+        self.model = Model(self.inputs, self.outputs, name=self.name)
+        self.built = True
 
     def call(self, inputs):
         x, s = inputs[:2]
+        outputs = []
 
         # -----------------------------embedding层----------------------------- #
-        x = Embedding(input_dim=self.vocab_size, output_dim=self.hidden_size, mask_zero=True,
-                      embeddings_initializer=initializers.truncated_normal(stddev=0.02),
-                      name='Embedding-Token')(x)
-        s = Embedding(input_dim=2, output_dim=self.hidden_size,
-                      embeddings_initializer=initializers.truncated_normal(stddev=0.02),
-                      name='Embedding-Segment')(s)
+        x = self.embeddings_x(x)
+        s = self.embeddings_s(s)
         # 加入类型信息
         x = Add(name='Embedding-Token-Segment')([x, s])
-        # 加入位置信息: batch_size * sen_len * embedding_size
+        # 加入位置信息: batch_size * sen_len * hidden_size
         x = PositionEmbedding(input_dim=self.sequence_length, output_dim=self.hidden_size,
                               embeddings_initializer=initializers.zeros,
                               name='Embedding-Position')(x)
@@ -69,6 +74,7 @@ class Bert(object):
         # -----------------------------embedding层----------------------------- #
 
         # -----------------------------transformer层----------------------------- #
+        attention_x = None
         for index in range(self.num_hidden_layers):
             attention_name = 'Transformer-%d-MultiHeadSelfAttention' % index
             feed_forward_name = 'Transformer-%d-FeedForward' % index
@@ -106,16 +112,28 @@ class Bert(object):
 
             # layer normalization
             attention_x = LayerNormalization(name='%s-Norm' % feed_forward_name)(attention_x)
-
-            return attention_x
         # -----------------------------transformer层----------------------------- #
 
-        # -----------------------------task层----------------------------- #
+        # -----------------------------任务层：Pooler----------------------------- #
+        outputs.append(attention_x)
+        pooler_x = Lambda(lambda x: x[:, 0], name='Pooler')(attention_x)
+        pooler_x = Dense(units=self.hidden_size, activation='tanh', name='Pooler-Dense',
+                         kernel_initializer=initializers.truncated_normal(stddev=0.02))(pooler_x)
+        outputs.append(pooler_x)
+        # -----------------------------任务层：Pooler----------------------------- #
 
-        # -----------------------------task层----------------------------- #
+        # -----------------------------任务层：mlm----------------------------- #
+        mlm_x = Dense(units=self.hidden_size, activation=self.hidden_act,
+                      kernel_initializer=initializers.truncated_normal(stddev=0.02), name='MLM-Dense')(attention_x)
+        mlm_x = LayerNormalization(name='MLM-Norm')(mlm_x)
+        embeddings_t = K.transpose(self.embeddings_x.embeddings)
+        mlm_x = K.dot(mlm_x, embeddings_t)
+        mlm_x = AddLayer(name='MLM-Bias')(mlm_x)
+        mlm_x = Softmax(name='MLM-Activation')(mlm_x)
+        outputs.append(mlm_x)
+        # -----------------------------任务层：mlm----------------------------- #
 
-
-
+        return outputs
 
 
 
