@@ -28,6 +28,7 @@ def build_transformer_model(config_path='checkpoint/pretrain/bert_config.json'):
     bert = Bert(**bert_config)
     bert.build()
 
+    # load weights
     # if checkpoint_path is None:
 
     inputs = bert.inputs
