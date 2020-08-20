@@ -64,7 +64,8 @@ class Bert(object):
         # 加入类型信息
         x = Add(name='Embedding-Token-Segment')([x, s])
         # 加入位置信息: batch_size * sen_len * hidden_size
-        x = PositionEmbedding(input_dim=self.sequence_length, output_dim=self.hidden_size,
+        x = PositionEmbedding(input_dim=self.sequence_length,
+                              output_dim=self.hidden_size,
                               embeddings_initializer=initializers.zeros,
                               name='Embedding-Position')(x)
         # layer normalization ???

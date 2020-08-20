@@ -21,7 +21,7 @@ class PositionEmbedding(Layer):
     def build(self, input_shape):
         super(PositionEmbedding, self).build(input_shape)
         self.embedding = self.add_weight(name='position_embeddings',
-                                         shape=(self.input_dim, self.output),
+                                         shape=(self.input_dim, self.output_dim),
                                          initializer=self.embeddings_initializer)
         self.built = True
 
