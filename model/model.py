@@ -54,7 +54,6 @@ class Bert(object):
 
     def call(self, inputs):
         x, s = inputs[:2]
-        outputs = []
 
         # -----------------------------embedding层----------------------------- #
         x = self.embeddings_x(x)
@@ -115,11 +114,9 @@ class Bert(object):
         # -----------------------------transformer层----------------------------- #
 
         # -----------------------------任务层：Pooler----------------------------- #
-        outputs.append(attention_x)
         pooler_x = Lambda(lambda x: x[:, 0], name='Pooler')(attention_x)
         pooler_x = Dense(units=self.hidden_size, activation='tanh', name='Pooler-Dense',
                          kernel_initializer=initializers.truncated_normal(stddev=0.02))(pooler_x)
-        outputs.append(pooler_x)
         # -----------------------------任务层：Pooler----------------------------- #
 
         # -----------------------------任务层：mlm----------------------------- #
@@ -129,24 +126,7 @@ class Bert(object):
         embeddings_t = K.transpose(self.embeddings_x.embeddings)
         mlm_x = K.dot(mlm_x, embeddings_t)
         mlm_x = AddLayer(name='MLM-Bias')(mlm_x)
-        mlm_x = Softmax(name='MLM-Activation')(mlm_x)
-        outputs.append(mlm_x)
+        outputs = Softmax(name='MLM-Activation')(mlm_x)
         # -----------------------------任务层：mlm----------------------------- #
 
-        return outputs
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+        return attention_x, pooler_x, outputs

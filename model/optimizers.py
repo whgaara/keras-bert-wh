@@ -25,7 +25,7 @@ class Adam(keras.optimizers.Optimizer):
     ):
         kwargs['name'] = kwargs.get('name') or 'Adam'
         super(Adam, self).__init__(**kwargs)
-        self._set_hyper('learning_rate', learning_rate)
+        self._set_hyper('LearningRate', learning_rate)
         self._set_hyper('beta_1', beta_1)
         self._set_hyper('beta_2', beta_2)
         self.epsilon = epsilon or K.epislon()
@@ -79,7 +79,7 @@ class Adam(keras.optimizers.Optimizer):
 
     def get_config(self):
         config = {
-            'learning_rate': self._serialize_hyperparameter('learning_rate'),
+            'LearningRate': self._serialize_hyperparameter('LearningRate'),
             'beta_1': self._serialize_hyperparameter('beta_1'),
             'beta_2': self._serialize_hyperparameter('beta_2'),
             'epsilon': self.epsilon,
@@ -128,7 +128,7 @@ class AdaFactorBase(keras.optimizers.Optimizer):
             if not hasattr(self, '__learning_rate'):
                 with K.name_scope(self.__class__.__name__):
                     self.__learning_rate = K.variable(
-                        self._learning_rate, name='learning_rate'
+                        self._learning_rate, name='LearningRate'
                     )
             return self.__learning_rate
 
@@ -154,7 +154,7 @@ class AdaFactorBase(keras.optimizers.Optimizer):
 
     def get_config(self):
         config = {
-            'learning_rate': self._learning_rate,
+            'LearningRate': self._learning_rate,
             'beta1': self.beta1,
             'beta2': self._beta2,
             'epsilon1': self.epsilon1,
@@ -330,7 +330,7 @@ def extend_with_weight_decay(BaseOptimizer):
         @insert_arguments(weight_decay_rate=0.01, exclude_from_weight_decay=[])
         def __init__(self, *args, **kwargs):
             super(NewOptimizer, self).__init__(*args, **kwargs)
-            if not hasattr(self, 'learning_rate'):
+            if not hasattr(self, 'LearningRate'):
                 self.learning_rate = self.lr
 
         @K.symbolic
@@ -353,8 +353,8 @@ def extend_with_weight_decay(BaseOptimizer):
 
         def get_config(self):
             config = {
-                'weight_decay_rate': self.weight_decay_rate,
-                'exclude_from_weight_decay': self.exclude_from_weight_decay,
+                'WeightDecayRate': self.weight_decay_rate,
+                'ExcludeFromWeightDecay': self.exclude_from_weight_decay,
             }
             base_config = super(NewOptimizer, self).get_config()
             return dict(list(base_config.items()) + list(config.items()))
@@ -393,8 +393,8 @@ def extend_with_weight_decay_v2(BaseOptimizer):
 
         def get_config(self):
             config = {
-                'weight_decay_rate': self.weight_decay_rate,
-                'exclude_from_weight_decay': self.exclude_from_weight_decay,
+                'WeightDecayRate': self.weight_decay_rate,
+                'ExcludeFromWeightDecay': self.exclude_from_weight_decay,
             }
             base_config = super(NewOptimizer, self).get_config()
             return dict(list(base_config.items()) + list(config.items()))
@@ -414,7 +414,7 @@ def extend_with_layer_adaptation(BaseOptimizer):
         @insert_arguments(exclude_from_layer_adaptation=[])
         def __init__(self, *args, **kwargs):
             super(NewOptimizer, self).__init__(*args, **kwargs)
-            if not hasattr(self, 'learning_rate'):
+            if not hasattr(self, 'LearningRate'):
                 self.learning_rate = self.lr
 
         @K.symbolic
@@ -544,7 +544,7 @@ def extend_with_piecewise_linear_lr(BaseOptimizer):
 
         def get_config(self):
             config = {
-                'lr_schedule': self.lr_schedule,
+                'LrSchedule': self.lr_schedule,
             }
             base_config = super(NewOptimizer, self).get_config()
             return dict(list(base_config.items()) + list(config.items()))
@@ -574,7 +574,7 @@ def extend_with_piecewise_linear_lr_v2(BaseOptimizer):
 
         def get_config(self):
             config = {
-                'lr_schedule': self.lr_schedule,
+                'LrSchedule': self.lr_schedule,
             }
             base_config = super(NewOptimizer, self).get_config()
             return dict(list(base_config.items()) + list(config.items()))
