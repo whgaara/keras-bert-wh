@@ -11,6 +11,7 @@ from layers.AddLayer import AddLayer
 
 class Bert(object):
     def __init__(self,
+                 attention_probs_dropout_prob,  # attention Dropout比例
                  sequence_length,  # 句子的长度
                  vocab_size,  # 词表大小
                  hidden_size,  # 编码维度
@@ -21,6 +22,7 @@ class Bert(object):
                  max_position_embeddings,  # 最大序列长度
                  hidden_dropout_prob=None,  # Dropout比例
                  name=None,  # 模型名称
+                 **kwargs
                  ):
         self.sequence_length = sequence_length
         self.vocab_size = vocab_size
@@ -30,7 +32,8 @@ class Bert(object):
         self.attention_head_size = hidden_size // num_attention_heads
         self.intermediate_size = intermediate_size
         self.max_position_embeddings = max_position_embeddings
-        self.dropout_rate = hidden_dropout_prob or 0
+        self.attention_dropout_rate = attention_probs_dropout_prob or 0
+        self.hidden_dropout_rate = hidden_dropout_prob or 0
         self.hidden_act = hidden_act
         self.name = name
         self.built = False
@@ -67,7 +70,7 @@ class Bert(object):
         # layer normalization ???
         x = LayerNormalization(name='Embedding-Norm')(x)
         # drop out
-        x = Dropout(rate=self.dropout_rate, name='Embedding-Dropout')(x)
+        x = Dropout(rate=self.hidden_dropout_rate, name='Embedding-Dropout')(x)
         # dense
         x = Dense(units=self.hidden_size, kernel_initializer=initializers.truncated_normal(stddev=0.02))(x)
         # -----------------------------embedding层----------------------------- #
@@ -86,7 +89,7 @@ class Bert(object):
                                                  name=attention_name)(new_x)
 
             # drop out
-            attention_x = Dropout(rate=self.dropout_rate, name='%s-Dropout' % attention_name)(attention_x)
+            attention_x = Dropout(rate=self.attention_dropout_rate, name='%s-Dropout' % attention_name)(attention_x)
 
             # add
             attention_x = Add(name='%s-Add' % attention_name)([x, attention_x])
@@ -104,7 +107,7 @@ class Bert(object):
             )(attention_x)
 
             # drop out
-            attention_x = Dropout(rate=self.dropout_rate, name='%s-Dropout' % feed_forward_name)(attention_x)
+            attention_x = Dropout(rate=self.hidden_dropout_rate, name='%s-Dropout' % feed_forward_name)(attention_x)
 
             # add
             attention_x = Add(name='%s-Add' % feed_forward_name)([x, attention_x])

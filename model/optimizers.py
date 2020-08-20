@@ -3,10 +3,10 @@
 
 import numpy as np
 import tensorflow as tf
-from bert4keras.backend import keras, K, is_tf_keras
-from bert4keras.snippets import is_string, string_matching
-from bert4keras.snippets import is_one_of, insert_arguments
-from bert4keras.backend import piecewise_linear
+from model.backend import keras, K, is_tf_keras
+from model.snippets import is_string, string_matching
+from model.snippets import is_one_of, insert_arguments
+from model.backend import piecewise_linear
 import re
 
 
