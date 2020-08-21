@@ -15,4 +15,4 @@ class AddLayer(Layer):
         )
 
     def call(self, inputs, **kwargs):
-        return keras.layers.Add()([inputs, self.bias])
+        return keras.backend.bias_add(inputs, self.bias)

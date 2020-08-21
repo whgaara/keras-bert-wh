@@ -49,7 +49,7 @@ class Bert(object):
         token_in = Input(shape=(self.sequence_length,), name='Input-Token')
         segment_in = Input(shape=(self.sequence_length,), name='Input-Segment')
         self.inputs = [token_in, segment_in]
-        self.outputs = self.call(self.inputs)
+        self.attention_x, self.pooler_x, self.outputs = self.call(self.inputs)
         if not isinstance(self.outputs, list):
             self.outputs = [self.outputs]
         self.model = Model(self.inputs, self.outputs, name=self.name)
