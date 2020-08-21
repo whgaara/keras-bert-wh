@@ -34,6 +34,9 @@ class FeedForward(Layer):
         x = self.dense2(x)
         return x
 
+    def compute_mask(self, inputs, mask=None):
+        return mask
+
     def get_config(self):
         config = {
             'units': self.units,

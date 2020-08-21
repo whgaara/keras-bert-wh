@@ -1,8 +1,6 @@
-import keras
 import keras.backend as K
 
 from keras.layers import Layer
-from keras import initializers
 
 
 class LayerNormalization(Layer):
@@ -14,8 +12,7 @@ class LayerNormalization(Layer):
 
     def build(self, input_shape):
         super(LayerNormalization, self).build(input_shape)
-        # shape: embedding_size
-        shape = input_shape[-1]
+        shape = (input_shape[-1], )
         if self.center:
             self.beta = self.add_weight(shape=shape, initializer='zeros', name='beta')
         if self.scale:
@@ -34,6 +31,9 @@ class LayerNormalization(Layer):
         if self.center:
             outputs = outputs + self.beta
         return outputs
+
+    def compute_mask(self, inputs, mask=None):
+        return mask
 
     def get_config(self):
         config = {

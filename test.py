@@ -1,3 +1,4 @@
+from __future__ import print_function
 import keras
 import tensorflow as tf
 import keras.backend as K
@@ -24,19 +25,29 @@ import keras.backend as K
 # d = [2]
 # print(c + d)
 
-a = K.ones(shape=[128, 2, 512, 64])
-b = K.ones(shape=[128, 2, 512, 64])
-c = K.batch_dot(a, b, axes=[3, 3])
-d = K.batch_dot(a, b, axes=[2, 2])
-b = K.ones(shape=[128, 2, 64, 512])
-e = K.dot(a, b)
+# a = K.ones(shape=[128, 2, 512, 64])
+# b = K.ones(shape=[128, 2, 512, 64])
+# c = K.batch_dot(a, b, axes=[3, 3])
+# d = K.batch_dot(a, b, axes=[2, 2])
+# b = K.ones(shape=[128, 2, 64, 512])
+# e = K.dot(a, b)
 # print(K.int_shape(e))
 
-a1 = K.ones(shape=[128, 512, 768])
-b1 = K.ones(shape=[21128, 768])
-print(K.int_shape(b1))
-b1 = K.transpose(b1)
-print(K.int_shape(b1))
-c1 = K.dot(a1, b1)
-print(K.int_shape(c1))
+# a1 = K.ones(shape=[128, 512, 768])
+# b1 = K.ones(shape=[21128, 768])
+# print(K.int_shape(b1))
+# b1 = K.transpose(b1)
+# print(K.int_shape(b1))
+# c1 = K.dot(a1, b1)
+# print(K.int_shape(c1))
 
+
+a1 = K.ones(shape=[2, 5])
+b1 = 2.0
+# x = K.dot(a1, b1)
+x = a1 * b1
+
+with tf.Session() as sess:
+    sess.run(tf.initialize_all_variables())
+    re = sess.run(x)
+    print(re)

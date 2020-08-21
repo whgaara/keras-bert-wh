@@ -61,7 +61,8 @@ class MultiHeadSelfAttention(Layer):
         # q与k的转置相乘得到：[batch_size, head, seq_len, seq_len]
         attention_scores = K.batch_dot(q, k, axes=[3, 3])
         # 因为q、k相乘，结果变大，因此对结果除以根号512
-        attention_scores = keras.layers.multiply([attention_scores, 1.0 / math.sqrt(float(self.size_per_head))])
+        # attention_scores = keras.layers.multiply([attention_scores, 1.0 / math.sqrt(float(self.size_per_head))])
+        attention_scores = attention_scores / math.sqrt(float(self.size_per_head))
 
         # 防止padding补全的0经过softmax后影响结果，对每个0值都加一个很大的负数，这样softmax后也会约等于0
         # attention_mask的shape为：[batch_size, seq_len, seq_len]
@@ -76,6 +77,9 @@ class MultiHeadSelfAttention(Layer):
         attention_probs = K.reshape(attention_probs, [-1, K.shape(qx)[1], self.out_dim])
         attention_probs = self.o_layer(attention_probs)
         return attention_probs
+
+    def compute_mask(self, inputs, mask=None):
+        return mask
 
     def get_config(self):
         config = {
