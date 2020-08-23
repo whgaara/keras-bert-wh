@@ -7,6 +7,7 @@ from layers.LayerNormalization import LayerNormalization
 from layers.MultiHeadSelfAttention import MultiHeadSelfAttention
 from layers.FeedForward import FeedForward
 from layers.AddLayer import AddLayer
+from layers.TransposeDot import TransposeDot
 
 
 class Bert(object):
@@ -127,8 +128,7 @@ class Bert(object):
         mlm_x = Dense(units=self.hidden_size, activation=self.hidden_act,
                       kernel_initializer=initializers.truncated_normal(stddev=0.02), name='MLM-Dense')(attention_x)
         mlm_x = LayerNormalization(name='MLM-Norm')(mlm_x)
-        embeddings_t = K.transpose(self.embeddings_x.embeddings)
-        mlm_x = K.dot(mlm_x, embeddings_t)
+        mlm_x = TransposeDot(embeddings=self.embeddings_x.embeddings, name='MLM-TransposeDot')(mlm_x)
         mlm_x = AddLayer(name='MLM-Bias')(mlm_x)
         outputs = Softmax(name='MLM-Activation')(mlm_x)
         # -----------------------------任务层：mlm----------------------------- #

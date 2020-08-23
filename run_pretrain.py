@@ -32,21 +32,23 @@ def build_transformer_model(config_path='checkpoint/pretrain/bert_config.json'):
     # 加载bert模型
     bert = Bert(**bert_config)
     bert.build()
-    attention_x, pooler_x, outputs = bert.outputs
+    bert_outputs = bert.outputs[0]
 
-    def mlm_loss(y_gt, y_prob, y_mask):
+    def mlm_loss(inputs):
+        y_gt, y_prob, y_mask = inputs
         loss = K.sparse_categorical_crossentropy(y_gt, y_prob, from_logits=True)
         loss = K.sum(loss * y_mask) / (K.sum(y_mask) + K.epsilon())
         return loss
 
-    def mlm_acc(y_gt, y_prob, y_mask):
+    def mlm_acc(inputs):
+        y_gt, y_prob, y_mask = inputs
         y_true = K.cast(y_gt, 'float32')
         acc = keras.metrics.sparse_categorical_accuracy(y_true, y_prob)
         acc = K.sum(acc * y_mask) / (K.sum(y_mask) + K.epsilon())
         return acc
 
-    mlm_loss = Lambda(mlm_loss, name='mlm_loss')([token_ids, outputs, is_masked])
-    mlm_acc = Lambda(mlm_acc, name='mlm_acc')([token_ids, outputs, is_masked])
+    mlm_loss = Lambda(mlm_loss, name='mlm_loss')([token_ids, bert_outputs, is_masked])
+    mlm_acc = Lambda(mlm_acc, name='mlm_acc')([token_ids, bert_outputs, is_masked])
 
     # load weights
     # if checkpoint_path is None:
@@ -66,22 +68,23 @@ def build_model_for_pretraining(config_path):
     bert, train_model, loss = build_transformer_model(config_path)
 
     # 优化器
-    optimizer = extend_with_weight_decay(Adam)
-    optimizer = extend_with_piecewise_linear_lr(optimizer)
-    optimizer_params = {
-        'LearningRate': LearningRate,
-        'LrSchedule': LrSchedule,
-        'WeightDecayRate': WeightDecayRate,
-        'ExcludeFromWeightDecay': ExcludeFromWeightDecay,
-        'bias_correction': False,
-    }
-    if GradAccumSteps > 1:
-        optimizer = extend_with_gradient_accumulation(optimizer)
-        optimizer_params['grad_accum_steps'] = GradAccumSteps
-    optimizer = optimizer(**optimizer_params)
+    # optimizer = extend_with_weight_decay(Adam)
+    # optimizer = extend_with_piecewise_linear_lr(optimizer)
+    # optimizer_params = {
+    #     'LearningRate': LearningRate,
+    #     'LrSchedule': LrSchedule,
+    #     'WeightDecayRate': WeightDecayRate,
+    #     'ExcludeFromWeightDecay': ExcludeFromWeightDecay,
+    #     'bias_correction': False,
+    # }
+    # if GradAccumSteps > 1:
+    #     optimizer = extend_with_gradient_accumulation(optimizer)
+    #     optimizer_params['grad_accum_steps'] = GradAccumSteps
+    # optimizer = optimizer(**optimizer_params)
 
     # 模型定型
-    train_model.compile(loss=loss, optimizer=optimizer)
+    # train_model.compile(loss=loss, optimizer=optimizer)
+    train_model.compile(loss=loss, optimizer='adam')
 
     return train_model
 
@@ -89,9 +92,4 @@ def build_model_for_pretraining(config_path):
 if __name__ == '__main__':
     save_checkpoint = SaveCheckpoint()
     train_model = build_model_for_pretraining(BertConfigPath)
-    train_model.fit(
-        data_set,
-        steps_per_epoch=StepsPerEpoch,
-        epochs=Epochs,
-        callbacks=[save_checkpoint],
-    )
+    train_model.fit(data_set, steps_per_epoch=StepsPerEpoch, epochs=Epochs, callbacks=[save_checkpoint])

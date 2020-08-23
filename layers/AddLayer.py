@@ -16,3 +16,6 @@ class AddLayer(Layer):
 
     def call(self, inputs, **kwargs):
         return keras.backend.bias_add(inputs, self.bias)
+
+    def compute_mask(self, inputs, mask=None):
+        return mask
