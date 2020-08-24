@@ -157,8 +157,6 @@ class RobertaTrainingData(object):
         """
         加载处理成tfrecord格式的语料
         """
-        if not isinstance(tfrecords, list):
-            tfrecords = [tfrecords]
         dataset = tf.data.TFRecordDataset(tfrecords)  # 加载
         dataset = dataset.map(RobertaTrainingData.parse_function)  # 解析
         dataset = dataset.repeat()  # 循环
@@ -171,10 +169,11 @@ if __name__ == '__main__':
     robert = RobertaTrainingData()
     # 使用动态mask，因此，同样的句子会重复10次，每次mask的内容是不一样的。
     for i in range(10):
-        writer = tf.python_io.TFRecordWriter(os.path.join('data', 'roberta_%s.tfrecord' % i))
+        writer = tf.io.TFRecordWriter(os.path.join('data', 'roberta_%s.tfrecord' % i))
         for texts in tqdm(get_texts()):
             texts_ids = robert.texts_to_ids(texts)
             instances = robert.ids_to_mask(texts_ids)
             serialize_instances = robert.tfrecord_serialize(instances)
             for serialize_instance in serialize_instances:
                 writer.write(serialize_instance)
+        writer.close()

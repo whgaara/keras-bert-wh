@@ -1,14 +1,13 @@
-from __future__ import print_function
 import keras
 import tensorflow as tf
 import keras.backend as K
 # a = tf.ones([10], dtype=tf.int8)
-#
+
 # b = tf.constant(1)
 # c = tf.zeros((1))
 # d = K.zeros([1])
 # print(d)
-#
+
 # with tf.Session() as sess:
 #     print(sess.run(a))
 #     print(sess.run(a-1))
@@ -20,7 +19,7 @@ import keras.backend as K
 # print(dict([('a', '1')]))
 # print(list(a.items()) + list(b.items()))
 # print(dict(list(a.items()) + list(b.items())))
-#
+
 # c = [1]
 # d = [2]
 # print(c + d)
@@ -42,12 +41,49 @@ import keras.backend as K
 # print(K.int_shape(c1))
 
 
-a1 = K.ones(shape=[2, 5])
-b1 = 2.0
+# a1 = K.ones(shape=[2, 5])
+# b1 = 2.0
 # x = K.dot(a1, b1)
-x = a1 * b1
+# x = a1 * b1
 
-with tf.Session() as sess:
-    sess.run(tf.initialize_all_variables())
-    re = sess.run(x)
-    print(re)
+# with tf.Session() as sess:
+#     sess.run(tf.initialize_all_variables())
+#     re = sess.run(x)
+#     print(re)
+
+filename = 'data/roberta_0.tfrecord'
+s = tf.train.string_input_producer([filename])
+reader = tf.TFRecordReader()
+_, serialized_example = reader.read(s)
+features = tf.parse_single_example(serialized_example,
+                                   features={
+                                       'token_ids': tf.io.FixedLenFeature([], tf.int64),
+                                        'mask_ids': tf.io.FixedLenFeature([], tf.int64),
+                                   })
+token_ids = features['token_ids']
+token_ids = tf.cast(token_ids, tf.int64)
+# token_ids = tf.deco(features['token_ids'], tf.int64)
+# token_ids = tf.reshape(token_ids, [-1, 512])
+
+with tf.Session() as sess:  # 开始一个会话
+    init_op = tf.global_variables_initializer()
+    sess.run(init_op)
+    token = sess.run([token_ids])
+    print(token)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

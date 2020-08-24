@@ -1,9 +1,9 @@
 import math
-import keras
 import tensorflow as tf
 import keras.backend as K
 
-from keras.layers import Layer, Dense, initializers
+from keras import initializers
+from keras.layers import Layer, Dense
 
 
 class MultiHeadSelfAttention(Layer):

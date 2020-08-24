@@ -1,5 +1,4 @@
-import keras
-
+from keras import initializers
 from keras.layers import *
 from keras.models import Model
 from layers.PositionEmbedding import PositionEmbedding
@@ -39,10 +38,10 @@ class Bert(object):
         self.name = name
         self.built = False
         self.embeddings_x = Embedding(input_dim=self.vocab_size, output_dim=self.hidden_size, mask_zero=True,
-                                      embeddings_initializer=initializers.truncated_normal(stddev=0.02),
+                                      embeddings_initializer=initializers.TruncatedNormal(stddev=0.02),
                                       name='Embedding-Token')
         self.embeddings_s = Embedding(input_dim=2, output_dim=self.hidden_size,
-                                      embeddings_initializer=initializers.truncated_normal(stddev=0.02),
+                                      embeddings_initializer=initializers.TruncatedNormal(stddev=0.02),
                                       name='Embedding-Segment')
 
     def build(self):
@@ -74,7 +73,7 @@ class Bert(object):
         # drop out
         x = Dropout(rate=self.hidden_dropout_rate, name='Embedding-Dropout')(x)
         # dense
-        x = Dense(units=self.hidden_size, kernel_initializer=initializers.truncated_normal(stddev=0.02))(x)
+        x = Dense(units=self.hidden_size, kernel_initializer=initializers.TruncatedNormal(stddev=0.02))(x)
         # -----------------------------embedding层----------------------------- #
 
         # -----------------------------transformer层----------------------------- #
@@ -87,7 +86,7 @@ class Bert(object):
             new_x = [x, x, x]
             attention_x = MultiHeadSelfAttention(attention_head_num=self.num_attention_heads,
                                                  attention_head_size=self.attention_head_size,
-                                                 kernel_initializer=initializers.truncated_normal(stddev=0.02),
+                                                 kernel_initializer=initializers.TruncatedNormal(stddev=0.02),
                                                  name=attention_name)(new_x)
 
             # drop out
@@ -104,7 +103,7 @@ class Bert(object):
                 units=self.intermediate_size,
                 activation=self.hidden_act,
                 use_bias=True,
-                kernel_initializer=initializers.truncated_normal(stddev=0.02),
+                kernel_initializer=initializers.TruncatedNormal(stddev=0.02),
                 name=feed_forward_name
             )(attention_x)
 
@@ -121,12 +120,12 @@ class Bert(object):
         # -----------------------------任务层：Pooler----------------------------- #
         pooler_x = Lambda(lambda x: x[:, 0], name='Pooler')(attention_x)
         pooler_x = Dense(units=self.hidden_size, activation='tanh', name='Pooler-Dense',
-                         kernel_initializer=initializers.truncated_normal(stddev=0.02))(pooler_x)
+                         kernel_initializer=initializers.TruncatedNormal(stddev=0.02))(pooler_x)
         # -----------------------------任务层：Pooler----------------------------- #
 
         # -----------------------------任务层：mlm----------------------------- #
         mlm_x = Dense(units=self.hidden_size, activation=self.hidden_act,
-                      kernel_initializer=initializers.truncated_normal(stddev=0.02), name='MLM-Dense')(attention_x)
+                      kernel_initializer=initializers.TruncatedNormal(stddev=0.02), name='MLM-Dense')(attention_x)
         mlm_x = LayerNormalization(name='MLM-Norm')(mlm_x)
         mlm_x = TransposeDot(embeddings=self.embeddings_x.embeddings, name='MLM-TransposeDot')(mlm_x)
         mlm_x = AddLayer(name='MLM-Bias')(mlm_x)
