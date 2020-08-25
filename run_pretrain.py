@@ -2,7 +2,10 @@
 # author:hang.wang
 
 import json
-import keras
+import tensorflow.compat.v1 as tf #使用1.0版本的方法
+tf.disable_v2_behavior()
+# import tensorflow as tf
+# tf.compat.v1.disable_eager_execution()
 
 from model.model import Bert
 from model.optimizers import *
@@ -21,8 +24,8 @@ class SaveCheckpoint(keras.callbacks.Callback):
 
 
 def build_transformer_model(config_path='checkpoint/pretrain/bert_config.json'):
-    token_ids = keras.layers.Input(shape=(None,), dtype='int32', name='token_ids')
-    is_masked = keras.layers.Input(shape=(None,), dtype='float32', name='is_masked')
+    token_ids = keras.layers.Input(shape=(None,), dtype='int64', name='token_ids')
+    is_masked = keras.layers.Input(shape=(None,), dtype='float64', name='is_masked')
 
     # 载入bert的配置
     bert_config = json.load(open(config_path))
@@ -36,36 +39,37 @@ def build_transformer_model(config_path='checkpoint/pretrain/bert_config.json'):
 
     def mlm_loss(inputs):
         y_gt, y_prob, y_mask = inputs
+        y_gt = K.cast(y_gt, 'float32')
+        y_mask = K.cast(y_mask, 'float32')
         loss = K.sparse_categorical_crossentropy(y_gt, y_prob, from_logits=True)
         loss = K.sum(loss * y_mask) / (K.sum(y_mask) + K.epsilon())
         return loss
 
-    def mlm_acc(inputs):
-        y_gt, y_prob, y_mask = inputs
-        y_true = K.cast(y_gt, 'float32')
-        acc = keras.metrics.sparse_categorical_accuracy(y_true, y_prob)
-        acc = K.sum(acc * y_mask) / (K.sum(y_mask) + K.epsilon())
-        return acc
+    # def mlm_acc(inputs):
+    #     y_gt, y_prob, y_mask = inputs
+    #     y_true = K.cast(y_gt, 'float32')
+    #     acc = keras.metrics.sparse_categorical_accuracy(y_true, y_prob)
+    #     acc = K.sum(acc * y_mask) / (K.sum(y_mask) + K.epsilon())
+    #     return acc
 
     mlm_loss = Lambda(mlm_loss, name='mlm_loss')([token_ids, bert_outputs, is_masked])
-    mlm_acc = Lambda(mlm_acc, name='mlm_acc')([token_ids, bert_outputs, is_masked])
+    # mlm_acc = Lambda(mlm_acc, name='mlm_acc')([token_ids, bert_outputs, is_masked])
 
     # load weights
     # if checkpoint_path is None:
 
-    train_model = Model(bert.model.inputs + [token_ids, is_masked], [mlm_loss, mlm_acc])
-    # train_model = Model(bert.inputs + [token_ids, is_masked], [mlm_loss, mlm_acc])
+    train_model = Model(bert.inputs + [token_ids, is_masked], [mlm_loss])
 
     loss = {
-        'mlm_loss': lambda y_gt, y_pred: y_pred,
-        'mlm_acc': lambda y_gt, y_pred: K.stop_gradient(y_pred),
+        'mlm_loss': lambda y_true, y_pred: y_pred,
+        # 'mlm_acc': lambda y_gt, y_prob: K.stop_gradient(y_prob),
     }
 
-    return bert, train_model, loss
+    return train_model, loss
 
 
 def build_model_for_pretraining(config_path):
-    bert, train_model, loss = build_transformer_model(config_path)
+    train_model, loss = build_transformer_model(config_path)
 
     # 优化器
     # optimizer = extend_with_weight_decay(Adam)
@@ -84,7 +88,7 @@ def build_model_for_pretraining(config_path):
 
     # 模型定型
     # train_model.compile(loss=loss, optimizer=optimizer)
-    train_model.compile(loss=loss, optimizer='adam')
+    train_model.compile(optimizer='adam', loss=loss)
 
     return train_model
 
@@ -92,4 +96,9 @@ def build_model_for_pretraining(config_path):
 if __name__ == '__main__':
     save_checkpoint = SaveCheckpoint()
     train_model = build_model_for_pretraining(BertConfigPath)
-    train_model.fit(data_set, steps_per_epoch=StepsPerEpoch, epochs=Epochs, callbacks=[save_checkpoint])
+    train_model.fit(
+        data_set,
+        steps_per_epoch=StepsPerEpoch,
+        epochs=Epochs,
+        callbacks=[save_checkpoint]
+    )

@@ -141,14 +141,12 @@ class RobertaTrainingData(object):
             'Input-Token': masked_token_ids,
             'Input-Segment': segment_ids,
             'token_ids': token_ids,
-            'is_masked': K.cast(is_masked, K.floatx()),
+            # 'is_masked': K.cast(is_masked, K.floatx()),
+            'is_masked': K.cast(is_masked, 'float32'),
         }
         y = {
-            # 某些版本下会出现一种非常少见的报错，暂时无法解决
-            # 'mlm_loss': K.zeros([1]),
-            # 'mlm_acc': K.zeros([1]),
-            'mlm_loss': tf.zeros(1),
-            'mlm_acc': tf.zeros(1),
+            'mlm_loss': K.zeros([4, 1]),
+            # 'mlm_acc': K.ones([1]),
         }
         return x, y
 
@@ -160,7 +158,7 @@ class RobertaTrainingData(object):
         dataset = tf.data.TFRecordDataset(tfrecords)  # 加载
         dataset = dataset.map(RobertaTrainingData.parse_function)  # 解析
         dataset = dataset.repeat()  # 循环
-        dataset = dataset.shuffle(BatchSize * 1000)  # 打乱
+        # dataset = dataset.shuffle(BatchSize * 1000)  # 打乱
         dataset = dataset.batch(BatchSize)  # 成批
         return dataset
 

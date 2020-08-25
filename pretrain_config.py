@@ -6,7 +6,7 @@ BertConfigPath = 'checkpoint/pretrain/bert_config.json'
 # ## 训练参数 ## #
 Epochs = 32
 MaskRate = 0.15
-BatchSize = 8
+BatchSize = 4
 StepsPerEpoch = 16
 
 # roberta的段落长度上限为512
